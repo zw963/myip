@@ -2,27 +2,19 @@ on:
   push:
     tags:
       - "v*.*.*"
+    branches:
+      - master
+      - main
+  workflow_call:
 
 jobs:
+  call-ci:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
   build:
+    needs: call-ci
     runs-on: ubuntu-latest
     steps:
-      - name: Cache shards
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/shards
-          key: ${{ runner.os }}-shards-${{ hashFiles('shard.yml') }}
-          restore-keys: ${{ runner.os }}-shards-
-      - name: Download source
-        uses: actions/checkout@v2
-      - name: Install Crystal
-        uses: crystal-lang/install-crystal@v1
-      - name: Install shards
-        run: shards check || shards install
-      - name: Check formatting
-        run: crystal tool format --check
-      - name: Run tests
-        run: crystal spec --order=random --error-on-warnings
       - name: package information
         run: |
           echo "BINARY_NAME=myip" >> $GITHUB_ENV
